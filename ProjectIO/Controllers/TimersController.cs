@@ -58,6 +58,15 @@ namespace ProjectIO.Controllers
                     .ToListAsync()
             };
 
+            if (User.Identity.IsAuthenticated)
+            {
+                var query = from user in _context.Users
+                    where user.UserName == User.Identity.Name
+                    select user.Id;
+
+                vm.SelectedUserId = query.FirstOrDefault();
+            }
+
             return View(vm);
         }
 
@@ -66,14 +75,19 @@ namespace ProjectIO.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TimersViewModel timer)
         {
+            var selectedUserId = timer.SelectedUserId;
             if (!ModelState.IsValid || 
                 !int.TryParse(timer.SelectedTaskId, out var selectedTaskId) ||
-                !int.TryParse(timer.SelectedUserId, out var selectedUserId))
+                selectedUserId == null)
+            {
                 return View(timer);
+            }
 
             var newTimer = new Timer
             {
-                StartTime = DateTime.Now,
+                StartTime = timer.StartTime,
+                StopTime = timer.StopTime,
+                Duration = CalculateDuration(timer),
                 User = await _context.Users.FindAsync(selectedUserId),
                 Task = await _context.Tasks.FindAsync(selectedTaskId)
             };
@@ -115,6 +129,10 @@ namespace ProjectIO.Controllers
             {
                 try
                 {
+                    if (timer.StopTime != null)
+                    {
+                        timer.Duration = CalculateDuration(timer);
+                    }
                     _context.Update(timer);
                     await _context.SaveChangesAsync();
                 }
@@ -132,6 +150,14 @@ namespace ProjectIO.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(timer);
+        }
+
+        private TimeSpan? CalculateDuration(ITimer timer)
+        {
+            if (timer.StopTime == null)
+                return null;
+            
+            return timer.StopTime - timer.StartTime;
         }
 
         // GET: Timers/Delete/5

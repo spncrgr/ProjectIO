@@ -12,12 +12,6 @@ namespace ProjectIO.Data
 {
     public static class ApplicationDbContextSeedData
     {
-        public static void Run(this ApplicationDbContext context, IServiceProvider serviceProvider, string testUserPw)
-        {
-            GenerateUsersAsync(context, serviceProvider, testUserPw).Wait();
-            GenerateCustomersAsync(context).Wait();
-            GenerateProjectsAsync(context).Wait();
-        }
         public static async Task GenerateUsersAsync(this ApplicationDbContext context, IServiceProvider serviceProvider,
             string testUserPw)
         {
@@ -47,9 +41,9 @@ namespace ProjectIO.Data
             await EnsureRole(serviceProvider, userId, "User");
         }
 
-        public static async Task GenerateCustomersAsync(this ApplicationDbContext context)
+        public static void GenerateCustomers(this ApplicationDbContext context, bool force)
         {
-            if (context.Customers.Any())
+            if (context.Customers.Any() && !force)
             {
                 return;
             }
@@ -61,21 +55,21 @@ namespace ProjectIO.Data
                 customer.Name = string.Join(" ", Lorem.Words(2));
             }
 
-            await context.Customers.AddRangeAsync(customers);
-            await context.SaveChangesAsync();
+            context.Customers.AddRange(customers);
+            context.SaveChanges();
         }
 
-        public static async Task GenerateProjectsAsync(this ApplicationDbContext context)
+        public static void GenerateProjects(this ApplicationDbContext context, bool force)
         {
-            if (context.Projects.Any())
+            if (context.Projects.Any() && !force)
             {
                 return;
             }
 
-            var customers = await context.Customers.ToListAsync();
+            var customers = context.Customers.ToList();
             var projects = new Project[customers.Count];
 
-            for (int i = 0; i < customers.Count; i++)
+            for (var i = 0; i < customers.Count; i++)
             {
                 var customer = customers[i];
                 var project = new Project
@@ -87,8 +81,8 @@ namespace ProjectIO.Data
                 projects[i] = project;
             }
 
-            await context.Projects.AddRangeAsync(projects);
-            await context.SaveChangesAsync();
+            context.Projects.AddRange(projects);
+            context.SaveChanges();
         }
 
         private static async Task<string> EnsureUser(IServiceProvider serviceProvider, string testUserPw,
