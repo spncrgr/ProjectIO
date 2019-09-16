@@ -27,7 +27,8 @@ namespace ProjectIO
 
                 try
                 {
-//                    context.Run(services, testUserPw);
+                    context.GenerateCustomers(true);
+                    context.GenerateProjects(true);
                 }
                 catch (Exception e)
                 {
