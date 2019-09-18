@@ -33,6 +33,7 @@ namespace ProjectIO.Controllers
             }
 
             var task = await _context.Tasks
+                .Include(t => t.Timers)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (task == null)
             {
