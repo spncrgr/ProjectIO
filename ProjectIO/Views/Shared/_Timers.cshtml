@@ -1,11 +1,15 @@
 ﻿@model IEnumerable<ProjectIO.Models.Timer>
 
+<h4>Timers</h4>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
 <table class="table">
     <thead>
     <tr>
+        <th>
+            @Html.DisplayNameFor(timers => timers.User.UserName)
+        </th>
         <th>
             @Html.DisplayNameFor(model => model.StartTime)
         </th>
@@ -21,6 +25,9 @@
     <tbody>
     @foreach (var item in Model) {
         <tr>
+            <td>
+                @Html.DisplayFor(timer => item.User.UserName)
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.StartTime)
             </td>

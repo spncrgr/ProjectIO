@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -21,7 +22,7 @@ namespace ProjectIO.Controllers
         // GET: Tasks
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Tasks.ToListAsync());
+            return View(await _context.Tasks.Include(task => task.Project).ToListAsync());
         }
 
         // GET: Tasks/Details/5
@@ -34,13 +35,24 @@ namespace ProjectIO.Controllers
 
             var task = await _context.Tasks
                 .Include(t => t.Timers)
+                .ThenInclude(timer => timer.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (task == null)
             {
                 return NotFound();
             }
 
-            return View(task);
+
+            var vm = new TaskDetailViewModel
+            {
+                Id = task.Id,
+                Name = task.Name,
+                Description = task.Description,
+                Timers = task.Timers,
+            };
+
+            return View(vm);
         }
 
         // GET: Tasks/Create

@@ -1,4 +1,4 @@
-﻿@model ProjectIO.Models.Task
+﻿@model ProjectIO.Models.ViewModels.TaskDetailViewModel
 
 @{
     ViewData["Title"] = "Details";
@@ -25,11 +25,11 @@
     </dl>
     <hr/>
 </div>
-<div>
+<div class="mb-4">
     <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
 
-<div>
+<div class="container">
     <partial name="_Timers" model="@Model.Timers"/>
 </div>
