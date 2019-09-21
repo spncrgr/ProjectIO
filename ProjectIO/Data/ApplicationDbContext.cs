@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using ProjectIO.Areas.Identity;
 using ProjectIO.Models;
 
 namespace ProjectIO.Data
@@ -15,5 +16,7 @@ namespace ProjectIO.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<Timer> Timers { get; set; }
+        public DbSet<WebUser> WebUsers { get; set; }
+        public DbSet<Employee> Employees { get; set; }
     }
 }
