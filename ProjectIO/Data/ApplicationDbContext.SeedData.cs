@@ -5,6 +5,7 @@ using Faker;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ProjectIO.Areas.Identity;
 using ProjectIO.Models;
 using Task = System.Threading.Tasks.Task;
 
@@ -88,12 +89,12 @@ namespace ProjectIO.Data
         private static async Task<string> EnsureUser(IServiceProvider serviceProvider, string testUserPw,
             string userName)
         {
-            var userManager = serviceProvider.GetService<UserManager<IdentityUser>>();
+            var userManager = serviceProvider.GetService<UserManager<ApplicationUser>>();
 
             var user = await userManager.FindByNameAsync(userName);
             if (user == null)
             {
-                user = new IdentityUser {UserName = userName};
+                user = new ApplicationUser {UserName = userName};
                 await userManager.CreateAsync(user, testUserPw);
             }
 
@@ -113,7 +114,7 @@ namespace ProjectIO.Data
                 await roleManager.CreateAsync(new IdentityRole(role));
             }
 
-            var userManager = serviceProvider.GetService<UserManager<IdentityUser>>();
+            var userManager = serviceProvider.GetService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByIdAsync(uid);
 
             if (user == null)

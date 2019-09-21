@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ProjectIO.Areas.Identity
 {
-    public class WebUser : IdentityUser
+    public class ApplicationUser : IdentityUser
     {
         [Display(Name = "First Name")]
         public string FirstName { get; set; }

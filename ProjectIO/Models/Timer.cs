@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
+using ProjectIO.Areas.Identity;
 
 namespace ProjectIO.Models
 {
@@ -15,7 +16,7 @@ namespace ProjectIO.Models
         public TimeSpan? Duration { get; set; }
 
         // Associations
-        public IdentityUser User { get; set; }
+        public ApplicationUser User { get; set; }
         public Task Task { get; set; }
 
 //        public void StartTimer(int userId, int TaskId)
@@ -29,7 +30,7 @@ namespace ProjectIO.Models
         DateTime StartTime { get; set; }
         DateTime? StopTime { get; set; }
         TimeSpan? Duration { get; set; }
-        IdentityUser User { get; set; }
+        ApplicationUser User { get; set; }
         Task Task { get; set; }
     }
 }

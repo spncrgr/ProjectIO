@@ -5,7 +5,7 @@ using ProjectIO.Models;
 
 namespace ProjectIO.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -16,7 +16,6 @@ namespace ProjectIO.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<Timer> Timers { get; set; }
-        public DbSet<WebUser> WebUsers { get; set; }
         public DbSet<Employee> Employees { get; set; }
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ProjectIO.Areas.Identity;
 using ProjectIO.Data;
 
 namespace ProjectIO
@@ -34,8 +35,14 @@ namespace ProjectIO
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>()
+            services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = new PathString("/Identity/Account/Login");
+                options.LogoutPath = new PathString("/");
+            });
 
             services.AddMvc(config =>
             {
@@ -65,6 +72,7 @@ namespace ProjectIO
             app.UseStaticFiles();
 
             app.UseAuthentication();
+            app.UseCookiePolicy();
 
             app.UseMvc(routes => { routes.MapRoute("Default", "{controller=Home}/{action=Index}/{id?}"); });
         }

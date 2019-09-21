@@ -6,7 +6,6 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -17,23 +16,20 @@ namespace ProjectIO.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
         private readonly ApplicationDbContext _context;
 
         public RegisterModel(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender,
             ApplicationDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
-            _emailSender = emailSender;
             _context = context;
         }
 
@@ -45,26 +41,13 @@ namespace ProjectIO.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
-            [Display(Name = "First Name")]
-            public string FirstName { get; set; }
-            [Required]
-            [Display(Name = "Last Name")]
-            public string LastName { get; set; }
+            [Display(Name = "Employee ID")]
+            public string EmployeeId { get; set; }
 
             [Required]
             [Display(Name = "Registration Code")]
             public string RegistrationCode { get; set; }
 
-            [Required]
-            [Display(Name = "Employee ID")]
-            public string EmployeeId { get; set; }
-
-            [Required]
-            [EmailAddress]
-            [Display(Name = "Email")]
-            public string Email { get; set; }
-
-            [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
@@ -72,7 +55,7 @@ namespace ProjectIO.Areas.Identity.Pages.Account
 
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Compare("Password", ErrorMessage = "The password does not match.")]
             public string ConfirmPassword { get; set; }
         }
 
@@ -97,12 +80,12 @@ namespace ProjectIO.Areas.Identity.Pages.Account
                 {
                     return Page(); // TODO: Create a meaningful error here
                 }
-                var user = new WebUser
+                var user = new ApplicationUser
                 {
-                    FirstName = Input.FirstName,
-                    LastName = Input.LastName,
-                    UserName = Input.Email, 
-                    Email = Input.Email
+                    FirstName = employee.FirstName,
+                    LastName = employee.LastName,
+                    UserName = employee.Email, 
+                    Email = employee.Email
                 };
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)

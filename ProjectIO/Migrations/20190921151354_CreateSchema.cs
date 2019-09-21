@@ -2,9 +2,9 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ProjectIO.Data.Migrations
+namespace ProjectIO.Migrations
 {
-    public partial class CreateAppSchema : Migration
+    public partial class CreateSchema : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -40,7 +40,9 @@ namespace ProjectIO.Data.Migrations
                     TwoFactorEnabled = table.Column<bool>(nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
                     LockoutEnabled = table.Column<bool>(nullable: false),
-                    AccessFailedCount = table.Column<int>(nullable: false)
+                    AccessFailedCount = table.Column<int>(nullable: false),
+                    FirstName = table.Column<string>(nullable: true),
+                    LastName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -58,6 +60,22 @@ namespace ProjectIO.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Customers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Employees",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    FirstName = table.Column<string>(nullable: true),
+                    LastName = table.Column<string>(nullable: true),
+                    EmployeeId = table.Column<string>(nullable: true),
+                    RegistrationCode = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Employees", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -106,8 +124,8 @@ namespace ProjectIO.Data.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(maxLength: 128, nullable: false),
-                    ProviderKey = table.Column<string>(maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(nullable: false),
+                    ProviderKey = table.Column<string>(nullable: false),
                     ProviderDisplayName = table.Column<string>(nullable: true),
                     UserId = table.Column<string>(nullable: false)
                 },
@@ -151,8 +169,8 @@ namespace ProjectIO.Data.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(nullable: false),
-                    LoginProvider = table.Column<string>(maxLength: 128, nullable: false),
-                    Name = table.Column<string>(maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
                     Value = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -209,27 +227,28 @@ namespace ProjectIO.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskTimers",
+                name: "Timers",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     StartTime = table.Column<DateTime>(nullable: false),
-                    StopTime = table.Column<DateTime>(nullable: false),
+                    StopTime = table.Column<DateTime>(nullable: true),
+                    Duration = table.Column<TimeSpan>(nullable: true),
                     UserId = table.Column<string>(nullable: true),
                     TaskId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskTimers", x => x.Id);
+                    table.PrimaryKey("PK_Timers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskTimers_Tasks_TaskId",
+                        name: "FK_Timers_Tasks_TaskId",
                         column: x => x.TaskId,
                         principalTable: "Tasks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_TaskTimers_AspNetUsers_UserId",
+                        name: "FK_Timers_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -286,13 +305,13 @@ namespace ProjectIO.Data.Migrations
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskTimers_TaskId",
-                table: "TaskTimers",
+                name: "IX_Timers_TaskId",
+                table: "Timers",
                 column: "TaskId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskTimers_UserId",
-                table: "TaskTimers",
+                name: "IX_Timers_UserId",
+                table: "Timers",
                 column: "UserId");
         }
 
@@ -314,7 +333,10 @@ namespace ProjectIO.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "TaskTimers");
+                name: "Employees");
+
+            migrationBuilder.DropTable(
+                name: "Timers");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
