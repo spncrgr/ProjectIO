@@ -21,7 +21,7 @@ namespace ProjectIO.Controllers
         // GET: Projects
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Projects.ToListAsync());
+            return View(await _context.Projects.Include(project => project.Customer).ToListAsync());
         }
 
         // GET: Projects/Details/5
@@ -33,6 +33,7 @@ namespace ProjectIO.Controllers
             }
 
             var project = await _context.Projects
+                .Include(p => p.Customer)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (project == null)
             {
@@ -73,7 +74,6 @@ namespace ProjectIO.Controllers
             _context.Add(newProject);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-
         }
 
         // GET: Projects/Edit/5
@@ -84,37 +84,55 @@ namespace ProjectIO.Controllers
                 return NotFound();
             }
 
+            var project = await _context.Projects
+                .Include(p => p.Customer)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            var vm = new ProjectsViewModel
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description,
+                Customers = await _context.Customers
+                    .Select(customer => new SelectListItem {Text = customer.Name, Value = customer.Id.ToString()})
+                    .ToListAsync(),
+                SelectedCustomerId = project.Customer.Id.ToString()
+            };
+
+            return View(vm);
+        }
+
+        // POST: Projects/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,SelectedCustomerId")]
+            ProjectsViewModel pvm)
+        {
             var project = await _context.Projects.FindAsync(id);
             if (project == null)
             {
                 return NotFound();
             }
 
-            return View(project);
-        }
-
-        // POST: Projects/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Project project)
-        {
-            if (id != project.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && int.TryParse(pvm.SelectedCustomerId, out var selectedCustomerId))
             {
                 try
                 {
+                    project.Name = pvm.Name;
+                    project.Description = pvm.Description;
+                    project.Customer = await _context.Customers.FindAsync(selectedCustomerId);
+
                     _context.Update(project);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProjectExists(project.Id))
+                    if (!ProjectExists(pvm.Id))
                     {
                         return NotFound();
                     }
@@ -127,7 +145,7 @@ namespace ProjectIO.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(project);
+            return View(pvm);
         }
 
         // GET: Projects/Delete/5

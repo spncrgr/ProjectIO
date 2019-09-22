@@ -36,6 +36,7 @@ namespace ProjectIO.Controllers
             var task = await _context.Tasks
                 .Include(t => t.Timers)
                 .ThenInclude(timer => timer.User)
+                .Include(t => t.Project)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (task == null)
@@ -44,12 +45,13 @@ namespace ProjectIO.Controllers
             }
 
 
-            var vm = new TaskDetailViewModel
+            var vm = new TaskViewModel
             {
                 Id = task.Id,
                 Name = task.Name,
                 Description = task.Description,
                 Timers = task.Timers,
+                Project = task.Project
             };
 
             return View(vm);
@@ -58,7 +60,7 @@ namespace ProjectIO.Controllers
         // GET: Tasks/Create
         public async Task<IActionResult> Create()
         {
-            var vm = new CreateTaskViewModel
+            var vm = new TaskViewModel
             {
                 Projects = await _context.Projects
                     .Select(project => new SelectListItem {Text = project.Name, Value = project.Id.ToString()})
@@ -72,7 +74,7 @@ namespace ProjectIO.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateTaskViewModel task)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,SelectedProjectId")] TaskViewModel task)
         {
             if (!ModelState.IsValid || !int.TryParse(task.SelectedProjectId, out var selectedProjectId))
                 return View(task);
@@ -97,12 +99,26 @@ namespace ProjectIO.Controllers
                 return NotFound();
             }
 
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
             if (task == null)
             {
                 return NotFound();
             }
-            return View(task);
+
+            var vm = new TaskViewModel
+            {
+                Id = task.Id,
+                Name = task.Name,
+                Description = task.Description,
+                Projects = await _context.Projects
+                    .Select(project => new SelectListItem {Text = project.Name, Value = project.Id.ToString()})
+                    .ToListAsync(),
+                SelectedProjectId = task.Project.Id.ToString()
+            };
+            return View(vm);
         }
 
         // POST: Tasks/Edit/5
@@ -110,23 +126,28 @@ namespace ProjectIO.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Task task)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,SelectedProjectId")] TaskViewModel tvm)
         {
-            if (id != task.Id)
+            var task = await _context.Tasks.FindAsync(id);
+            if (task == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && int.TryParse(tvm.SelectedProjectId, out var selectedProjectId))
             {
                 try
                 {
+                    task.Name = tvm.Name;
+                    task.Description = tvm.Description;
+                    task.Project = await _context.Projects.FindAsync(selectedProjectId);
+
                     _context.Update(task);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TaskExists(task.Id))
+                    if (!TaskExists(tvm.Id))
                     {
                         return NotFound();
                     }
@@ -137,7 +158,7 @@ namespace ProjectIO.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(task);
+            return View(tvm);
         }
 
         // GET: Tasks/Delete/5

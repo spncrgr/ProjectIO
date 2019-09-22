@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectIO.Data;
 using ProjectIO.Models;
 using ProjectIO.Models.ViewModels;
+using Task = ProjectIO.Models.Task;
 
 namespace ProjectIO.Controllers
 {
@@ -22,7 +23,10 @@ namespace ProjectIO.Controllers
         // GET: Timers
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Timers.ToListAsync());
+            return View(await _context.Timers
+                .Include(t => t.Task)
+                .Include(t => t.User)
+                .ToListAsync());
         }
 
         // GET: Timers/Details/5
@@ -34,6 +38,8 @@ namespace ProjectIO.Controllers
             }
 
             var timer = await _context.Timers
+                .Include(t => t.Task)
+                .Include(t => t.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (timer == null)
             {
@@ -44,17 +50,27 @@ namespace ProjectIO.Controllers
         }
 
         // GET: Timers/Create
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? taskId)
         {
+            Task task;
+            if (taskId != null)
+            {
+                task = await _context.Tasks.FindAsync(taskId);
+            }
+            else
+            {
+                task = null;
+            }
+
             var vm = new TimersViewModel
             {
                 StartTime = DateTime.Now,
                 StopTime = null,
                 Tasks = await _context.Tasks
-                    .Select(task => new SelectListItem {Text = task.Description, Value = task.Id.ToString()})
+                    .Select(t => new SelectListItem {Text = t.Name, Value = t.Id.ToString()})
                     .ToListAsync(),
                 Users = await _context.Users
-                    .Select(user => new SelectListItem {Text = user.UserName, Value = user.Id})
+                    .Select(u => new SelectListItem {Text = u.UserName, Value = u.Id})
                     .ToListAsync()
             };
 
@@ -67,6 +83,12 @@ namespace ProjectIO.Controllers
                 vm.SelectedUserId = query.FirstOrDefault();
             }
 
+            if (task != null)
+            {
+                vm.Task = task;
+                vm.SelectedTaskId = task.Id.ToString();
+            }
+
             return View(vm);
         }
 
@@ -76,7 +98,7 @@ namespace ProjectIO.Controllers
         public async Task<IActionResult> Create(TimersViewModel timer)
         {
             var selectedUserId = timer.SelectedUserId;
-            if (!ModelState.IsValid || 
+            if (!ModelState.IsValid ||
                 !int.TryParse(timer.SelectedTaskId, out var selectedTaskId) ||
                 selectedUserId == null)
             {
@@ -94,7 +116,7 @@ namespace ProjectIO.Controllers
 
             _context.Add(newTimer);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Details", "Tasks", new {Id = timer.SelectedTaskId});
         }
 
         // GET: Timers/Edit/5
@@ -105,12 +127,37 @@ namespace ProjectIO.Controllers
                 return NotFound();
             }
 
-            var timer = await _context.Timers.FindAsync(id);
+            var timer = await _context.Timers
+                .Include(t => t.Task)
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
             if (timer == null)
             {
                 return NotFound();
             }
-            return View(timer);
+
+            var selectedUserId = timer.User.Id;
+            var selectedTaskId = timer.Task.Id.ToString();
+
+            var vm = new TimersViewModel
+            {
+                Id = timer.Id,
+                StartTime = timer.StartTime,
+                StopTime = timer.StopTime,
+                Duration = timer.Duration,
+                SelectedTaskId = selectedTaskId,
+                SelectedUserId = selectedUserId,
+                User = await _context.Users.FindAsync(selectedUserId),
+                Tasks = await _context.Tasks
+                    .Select(t => new SelectListItem {Text = t.Name, Value = t.Id.ToString()})
+                    .ToListAsync(),
+                Users = await _context.Users
+                    .Select(u => new SelectListItem {Text = u.UserName, Value = u.Id})
+                    .ToListAsync()
+            };
+
+            return View(vm);
         }
 
         // POST: Timers/Edit/5
@@ -118,27 +165,35 @@ namespace ProjectIO.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,StartTime,StopTime")] Timer timer)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,StartTime,StopTime,SelectedTaskId,SelectedUserId")] TimersViewModel timerVM)
         {
-            if (id != timer.Id)
+            var timer = await _context.Timers.FindAsync(id);
+            if (timer == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (ModelState.IsValid &&
+                int.TryParse(timerVM.SelectedTaskId, out var selectedTaskID))
             {
                 try
                 {
-                    if (timer.StopTime != null)
+                    timer.StartTime = timerVM.StartTime;
+                    timer.StopTime = timerVM.StopTime;
+                    timer.User = await _context.Users.FindAsync(timerVM.SelectedUserId);
+                    timer.Task = await _context.Tasks.FindAsync(selectedTaskID);
+
+                    if (timerVM.StopTime != null)
                     {
-                        timer.Duration = CalculateDuration(timer);
+                        timer.Duration = CalculateDuration(timerVM);
                     }
+
                     _context.Update(timer);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TimerExists(timer.Id))
+                    if (!TimerExists(timerVM.Id))
                     {
                         return NotFound();
                     }
@@ -147,16 +202,18 @@ namespace ProjectIO.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(timer);
+
+            return View(timerVM);
         }
 
         private TimeSpan? CalculateDuration(ITimer timer)
         {
             if (timer.StopTime == null)
                 return null;
-            
+
             return timer.StopTime - timer.StartTime;
         }
 
@@ -192,6 +249,15 @@ namespace ProjectIO.Controllers
         private bool TimerExists(int id)
         {
             return _context.Timers.Any(e => e.Id == id);
+        }
+
+        public async Task<IActionResult> StopTimer(int id)
+        {
+            var timer = await _context.Timers.FindAsync(id);
+            timer.StopTime = DateTime.Now;
+            timer.Duration = CalculateDuration(timer);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
     }
 }

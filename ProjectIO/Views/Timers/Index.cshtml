@@ -21,6 +21,12 @@
             <th>
                 @Html.DisplayNameFor(timers => timers.Duration)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Task)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.User)
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -34,12 +40,23 @@
                 @Html.DisplayFor(modelItem => item.StopTime)
             </td>
             <td>
-                @Html.DisplayFor(timer => item.Duration)
+                @Html.DisplayFor(modelItem => item.Duration)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Task.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.User.UserName)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (item.StopTime == null)
+                {
+                    <span> | </span>
+                    <a asp-action="StopTimer" asp-route-id="@item.Id">Stop Timer</a>
+                }
             </td>
         </tr>
 }

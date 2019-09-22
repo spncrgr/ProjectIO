@@ -1,4 +1,4 @@
-﻿@model ProjectIO.Models.ViewModels.TaskDetailViewModel
+﻿@model ProjectIO.Models.ViewModels.TaskViewModel
 
 @{
     ViewData["Title"] = "Details";
@@ -22,6 +22,12 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Description)
         </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Project)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Project.Name)
+        </dd>
     </dl>
     <hr/>
 </div>
@@ -31,5 +37,9 @@
 </div>
 
 <div class="container">
+    <h4>Timers</h4>
+    <p>
+        <a asp-controller="Timers" asp-action="Create" asp-route-taskId="@Model.Id">Create New</a>
+    </p>
     <partial name="_Timers" model="@Model.Timers"/>
 </div>

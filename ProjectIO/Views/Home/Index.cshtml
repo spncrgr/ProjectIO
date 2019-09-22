@@ -4,5 +4,8 @@
 
 <div class="text-center">
     <h1 class="display-4">Welcome to Project.IO</h1>
-    <p>Please log in to access this website.</p>
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <p>Please log in to access this website.</p>
+    }
 </div>
