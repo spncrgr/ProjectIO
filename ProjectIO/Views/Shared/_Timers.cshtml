@@ -37,6 +37,11 @@
                 <a asp-controller="Timers" asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-controller="Timers" asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-controller="Timers" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (item.StopTime == null)
+                {
+                    <span> | </span>
+                    <a asp-controller="Timers" asp-action="StopTimer" asp-route-id="@item.Id">Stop Timer</a>
+                }
             </td>
         </tr>
     }
