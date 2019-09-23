@@ -21,25 +21,47 @@ namespace ProjectIO.Data
                 return;
             }
 
-            var i = 1;
-            var userId = await EnsureUser(serviceProvider, testUserPw, $"user{i}@example.com");
-            await EnsureRole(serviceProvider, userId, "User");
+            var userId = await EnsureUser(serviceProvider, testUserPw, $"admin@example.com");
+            await EnsureRole(serviceProvider, userId, "Administrator");
+        }
 
-            i += 1;
-            userId = await EnsureUser(serviceProvider, testUserPw, $"user{i}@example.com");
-            await EnsureRole(serviceProvider, userId, "User");
+        public static async Task GenerateEmployeesAsync(this ApplicationDbContext context)
+        {
+            if (context.Employees.Any())
+            {
+                return;
+            }
 
-            i += 1;
-            userId = await EnsureUser(serviceProvider, testUserPw, $"user{i}@example.com");
-            await EnsureRole(serviceProvider, userId, "User");
+            var employees = new Employee[]
+            {
+                new Employee()
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "jdoe@example.com",
+                    EmployeeId = "D1234",
+                    RegistrationCode = "D9876"
+                },
+                new Employee()
+                {
+                    FirstName = "Peter",
+                    LastName = "Klinger",
+                    Email = "pklinger@example.com",
+                    EmployeeId = "K1234",
+                    RegistrationCode = "K9876"
+                },
+                new Employee()
+                {
+                    FirstName = "Jon",
+                    LastName = "Smith",
+                    Email = "jsmith@example.com",
+                    EmployeeId = "S1234",
+                    RegistrationCode = "S9876"
+                },
+            };
 
-            i += 1;
-            userId = await EnsureUser(serviceProvider, testUserPw, $"user{i}@example.com");
-            await EnsureRole(serviceProvider, userId, "User");
-
-            i += 1;
-            userId = await EnsureUser(serviceProvider, testUserPw, $"user{i}@example.com");
-            await EnsureRole(serviceProvider, userId, "User");
+            await context.Employees.AddRangeAsync(employees);
+            await context.SaveChangesAsync();
         }
 
         public static void GenerateCustomers(this ApplicationDbContext context, bool force)
